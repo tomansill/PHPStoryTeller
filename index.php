@@ -12,7 +12,9 @@
 					$scene = $jsonFile[$_GET['state']];
 				}
 		?>
-		<h1><?=$scene['title']?></h1>
+		<?php
+			if(array_key_exists('title' ,$scene)) echo "<h1>" . $scene['title'] . "</h1>";
+		?>
 		<div>
 			&emsp;<?=$scene['body']?>
 		</div>
