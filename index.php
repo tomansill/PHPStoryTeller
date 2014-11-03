@@ -25,7 +25,7 @@
 			}
 		?>
 		<?php
-			}else echo "<h1>Story file failed to open!</h1>";
+			}else echo "<h1>Story file failed to open!</h1> File not found or JSON decoder fail?";
 		?>
 	</body>
 </html>
