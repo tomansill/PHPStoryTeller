@@ -1,0 +1,38 @@
+{
+	"start":{
+		"title": "Sample story adventure",
+		"body": "You have left your work and walking to your house down the street, you noticed your co-worker Paul standing and watching at an abandoned house. You talk to Paul. Paul said he wants to go in that house and find out what's inside",
+		"options": [
+			[
+				"Go with Paul",
+				"goWithPaul"
+			],
+			[
+				"Urge Paul to not go",
+				"stopPaul"
+			]
+		]
+	},
+	"goWithPaul":{
+		"title": "",
+		"body": "You decided to go with Paul. Paul and you climbed over the metal fence and entered the yard. Paul and you has arrived at the front door of the house. There's a doorbell on the doorframe. Paul grabbed for the doorknob and struggled to turn the handle. Paul asks you to help him to get the door open.",
+		"options": [
+			[
+				"Help Paul",
+				"helpPaul"
+			],
+			[
+				"Ring the doorbell",
+				"ringthedoorbell"
+			],
+			[
+				"Go around the house",
+				"aroundthehouse"
+			]
+		]
+	},
+	"stopPaul":{
+		"title": "",
+		"body": "'Paul, it's bad idea. Trespassing is illegal. I don't want to risk getting in trouble', you said to Paul."	
+	}
+}
