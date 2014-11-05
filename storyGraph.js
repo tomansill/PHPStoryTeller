@@ -1,8 +1,8 @@
 $('document').ready(function(){
 	initialize();
 });
-//var adjListomp= {"v1": {"adjacency": ["v2", "v3", "v4"],"pos": [10,10]},"v2": {"adjacency": ["v3","v4"],"pos": [100,40]}, "v3": { "adjacency": ["v2","v4"],"pos": [60,100]},"v4": {"adjacency": ["v2","v3","v1"],"pos": [100,100]}};
-//adjList = {"v1": {"adjacency": ["v2", "v3"],"pos": [140,120],"force": [0,0],"velocity": [0,0]}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0]}, "v3": {"adjacency": ["v1", "v2"],"pos":[120,50],"force": [0,0],"velocity": [0,0]}};
+adjList = {"v1": {"adjacency": ["v2", "v3"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}, "v3": {"adjacency": ["v1", "v2"],"pos":[140,100],"force": [0,0],"velocity": [0,0], "color":"red"}};
+//adjList = {"v1": {"adjacency": ["v2"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}};
 var context;
 var mouseup = true;
 var mouseOver = false;
@@ -35,85 +35,50 @@ function update(){
 	if(live){
 		//physics simulation
 		var undirectedLines = new Array();
+		console.log("frame");
 		for(var key in adjList){
-			console.log("key: " + key + " pos: " + adjList[key]['pos']);
 			//physics simulation on each vertices
+			//console.log("repulsion");
 			for(var target in adjList){
-				if(key != target){
-					console.log("target: " + target);
-					//calculate distance between two vertices		
-					var x = adjList[key]['pos'][0] - adjList[target]['pos'][0];
-					var y = adjList[key]['pos'][1] - adjList[target]['pos'][1];
-					//console.log("x: " + x + " y: " + y);
-					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-					//console.log("distance between " + key + " and " + target + " is " + dist);
-					//repulsive force, find amount of force
-					var force = (1/dist);
-					var deg = Math.atan(y/x);
-					//console.log("force: " + force + " deg: " + (deg*57.2957795));
-					var dispx = force*Math.cos(deg);
-					var dispy = force*Math.sin(deg);
-					if(x < 0 && y < 0){
-						dispx *= -1;
-						dispy *= -1;
-					}
-					//console.log("repulsive displacement in x: " + dispx + " y: " + dispy);
-					//add force
-					adjList[key]['force'] = [adjList[key]['force'][0]+dispx, adjList[key]['force'][1]+dispy];
+				if(key != target && (adjList[key]['pos'][0] < adjList[target]['pos'][0] || (adjList[key]['pos'][0] == adjList[target]['pos'][0] && adjList[key]['pos'][1] <= adjList[target]['pos'][1]))){
+					var x = adjList[target]['pos'][0] - adjList[key]['pos'][0];
+					var y = adjList[target]['pos'][1] - adjList[key]['pos'][1];
+					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y,2));
+					var force = 1/Math.pow(dist,2);
+					var fx = (x*force)/dist;
+					var fy = (y*force)/dist;
+					//console.log("origin: " + key + " target: " + target + " x: " + x + " y: " + y + " dist: " + dist);
+					//console.log("force: " + force + " fx: " + fx + " fy: " + fy);
+					//adjList[key]['force'] = [adjList[key]['force'][0]-fx, adjList[key]['force'][1]-fy];
+					//adjList[target]['force'] = [adjList[target]['force'][0]+fx, adjList[target]['force'][1]+fy];
 				}
 			}//End of for loop
-			//physics simulation on each edge of vertex
+			//physics simulation on each edge
+			//console.log("attractive");
 			for(var i = 0; i < adjList[key]['adjacency'].length; i++){
 				var target = adjList[key]['adjacency'][i];
-				if(target in adjList){
-					if(![key, target] in undirectedLines && ![target, key] in undirectedLines){
-						undirectedLines[[key, target]] = 1;
-						//console.log("adjacency");
-						//sometimes people didn't finish developing keys after they added a key in adjacency list
-						//calculate distance
-						var x = adjList[key]['pos'][0] - adjList[target]['pos'][0];
-						var y = adjList[key]['pos'][1] - adjList[target]['pos'][1];
-						//console.log("x: " + x + " y: " + y);
-						var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-						console.log("distance between " + key + " and " + target + " is " + dist);
-						//attractive force, find amount of force
-						//var force = Math.sqrt(dist/100);;
-						var force = dist*0.001;
-						var deg = Math.atan(y/x);
-						//console.log("force: " + force + " deg: " + (deg*57.2957795));
-						var dispx = -force*Math.cos(deg);
-						var dispy = -force*Math.sin(deg);
-						if(x < 0 && y < 0){
-							dispx *= -1;
-							dispy *= -1;
-						}
-						console.log("attraction displacement in x: " + dispx + " y: " + dispy);
-						//add force
-						adjList[key]['force'] = [adjList[key]['force'][0]+dispx, adjList[key]['force'][1]+dispy];
-						adjList[target]['force'] = [adjList[target]['force'][0]-dispx, adjList[target]['force'][1]-dispy];
-					}
+				if(key != target && (adjList[key]['pos'][0] < adjList[target]['pos'][0] || (adjList[key]['pos'][0] == adjList[target]['pos'][0] && adjList[key]['pos'][1] <= adjList[target]['pos'][1]))){
+					var x = adjList[target]['pos'][0] - adjList[key]['pos'][0];
+					var y = adjList[target]['pos'][1] - adjList[key]['pos'][1];
+					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y,2));
+					var force = dist*0.0000002;
+					var fx = -(x*force)/dist;
+					var fy = -(y*force)/dist;
+					console.log("origin: " + key + " target: " + target + " x: " + x + " y: " + y + " dist: " + dist);
+					console.log("force: " + force + " fx: " + fx + " fy: " + fy);
+					adjList[key]['force'] = [adjList[key]['force'][0]-fx, adjList[key]['force'][1]-fy];
+					adjList[target]['force'] = [adjList[target]['force'][0]+fx, adjList[target]['force'][1]+fy];
 				}
 			}//End of for loop
-			console.log("force: " + adjList[key]['force']);
 		}//End of for loop
 		//update
 		for(var key in adjList){
 			//add velocity
 			adjList[key]['velocity'][0] += adjList[key]['force'][0];
 			adjList[key]['velocity'][1] += adjList[key]['force'][1];
-			//apply some friction
-			var fricx = Math.abs(adjList[key]['velocity'][0]) - 0.01;
-			var fricy = Math.abs(adjList[key]['velocity'][0]) - 0.01;
-			if(fricx < 0) fricx = 0;
-			if(fricy < 0) fricy = 0;
-			if(adjList[key]['velocity'][0] < 0) fricx *= -1;
-			if(adjList[key]['velocity'][1] < 0) fricy *= -1;
-			adjList[key]['velocity'][0] = fricx;
-			adjList[key]['velocity'][1] = fricy;
 			//move the vertex
 			adjList[key]['pos'][0] += (adjList[key]['velocity'][0])*(1000/60);
 			adjList[key]['pos'][1] += (adjList[key]['velocity'][1])*(1000/60);
-			adjList[key]['force'] = [0,0];
 		}//End of for loop
 		//draw
 		render(context, clip);	
@@ -176,7 +141,7 @@ function scaleClip(delta){
 	clip['bottom'] = (clip['bottom'] - ((clip['bottom'] - clip['top'])/2)) + y;
 	render(context, clip);
 }
-function drawCircle(ctx, x, y, scale){
+function drawCircle(ctx, x, y, scale, color){
 	ctx.beginPath();
 	ctx.arc(x, y, 10*scale, 0, 2*Math.PI);
 	ctx.closePath();
@@ -185,7 +150,7 @@ function drawCircle(ctx, x, y, scale){
 	ctx.beginPath();
 	ctx.arc(x, y, 8*scale, 0, 2*Math.PI);
 	ctx.closePath();
-	ctx.fillStyle="white";
+	ctx.fillStyle=color;
 	ctx.fill();	
 }
 function drawLine(ctx, x0, y0, x1, y1, scale){
@@ -196,7 +161,85 @@ function drawLine(ctx, x0, y0, x1, y1, scale){
 	ctx.lineWidth = 2*scale;
 	ctx.stroke();
 }
+function drawDebugArrow(ctx, x0, y0, dx, dy){
+	dx *= 5000000;
+	dy *= 5000000;
+	//console.log("draw x: " + x0 + " y: " + y0 + " dx: " + dx + " dy: " + dy);
+	ctx.beginPath();
+	ctx.lineTo(x0, y0);
+	ctx.lineTo(x0 + dx, y0 + dy);
+	ctx.strokeStyle="red";
+	ctx.stroke();	
+}
 
+function render(ctx, clip){
+	//background
+	ctx.fillStyle='#FFFFFF';
+	ctx.fillRect(0,0,width,height);
+	//add all lines to lines list and add all visible vertices in renderlist
+	var lines = new Array();
+	var renderlist = new Array();
+	var scale = Math.min(width/(clip['right']-clip['left']), height/(clip['bottom']-clip['top']));
+	var xscale = width/(clip['right'] - clip['left']);
+	var yscale = height/(clip['bottom'] - clip['top']);
+	for(var vertex in adjList){
+		var pos = adjList[vertex]['pos'];
+		//vertex
+		if(pos[0]+10 >= clip['left'] && pos[0]-10 < clip['right'] && pos[1]+10 >= clip['top'] && pos[1]-10 < clip['bottom']){
+			var x = Math.floor((pos[0] - clip['left'])*xscale);
+			var y = Math.floor((pos[1] - clip['top'])*yscale);
+			renderlist.push(['circle', x, y, adjList[vertex]['color'], adjList[vertex]['force']]);
+		}
+		//edge
+		for(var i = 0; i < adjList[vertex]['adjacency'].length; i++){
+			var key = adjList[vertex]['adjacency'][i];
+			if(key in adjList){
+				var obj = [pos, adjList[key]['pos']];
+				lines.push(obj);
+			}
+		}//End of for loop
+	}//End of for loop
+	//clean up lines and remove any lines that is outside of the canvas
+	for(var i = 0; i < lines.length; i++){
+		var start = lines[i][0];
+		var end = lines[i][1];
+		if(start[0]>end[0]){
+			//switch the arrays
+			var temp = end;
+			end = start;
+			start = temp;
+		}
+		//check if within the area
+		if(end[0] >= clip['left'] && Math.max(start[1], end[1]) >= clip['top'] && Math.min(start[1], end[1]) < clip['bottom'] && start[0] < clip['right']){
+			//console.log("clipping started");
+			//var returned = clipLine(start, end, clip);
+			//start = returned[0];
+			//end = returned[1];
+			//console.log("return: " + start + " " + end);
+			if(start[0] != end[0] || start[1] != end[1]){ //check if line is not reduced to a point or simply too small
+				var obj = ['line', Math.floor((start[0]-clip['left'])*xscale), Math.floor((start[1]-clip['top'])*yscale), Math.floor((end[0]-clip['left'])*xscale), Math.floor((end[1]-clip['top'])*yscale)];
+				renderlist.unshift(obj);
+			}
+
+		}
+	}//End of for loop
+	for(var i = 0; i < renderlist.length; i++){
+		//console.log(renderlist[i]);
+		if(renderlist[i][0] == 'circle'){
+			drawDebugArrow(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][4][0], renderlist[i][4][1]);
+			drawCircle(ctx, renderlist[i][1], renderlist[i][2], scale, renderlist[i][3]);
+		}else if(renderlist[i][0] == 'line'){
+			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
+		}
+	}//End of for loop
+	//insert text
+	if(live){
+		ctx.font="30px Verdana";
+		ctx.fillStyle = 'black';
+		ctx.fillText("simulation",5,30);
+	}
+}
+/*
 function clipLine(start, end, clip){
 	//console.log("start: " + start + " end: " + end);
 	//check if vertical or horizontal
@@ -262,70 +305,4 @@ function clipLine(start, end, clip){
 	}
 	return [start, end];
 }
-
-function render(ctx, clip){
-	//background
-	ctx.fillStyle='#FFFFFF';
-	ctx.fillRect(0,0,width,height);
-	//add all lines to lines list and add all visible vertices in renderlist
-	var lines = new Array();
-	var renderlist = new Array();
-	var scale = Math.min(width/(clip['right']-clip['left']), height/(clip['bottom']-clip['top']));
-	var xscale = width/(clip['right'] - clip['left']);
-	var yscale = height/(clip['bottom'] - clip['top']);
-	for(var vertex in adjList){
-		var pos = adjList[vertex]['pos'];
-		//vertex
-		if(pos[0]+10 >= clip['left'] && pos[0]-10 < clip['right'] && pos[1]+10 >= clip['top'] && pos[1]-10 < clip['bottom']){
-			var x = Math.floor((pos[0] - clip['left'])*xscale);
-			var y = Math.floor((pos[1] - clip['top'])*yscale);
-			renderlist.push(['circle', x, y]);
-		}
-		//edge
-		for(var i = 0; i < adjList[vertex]['adjacency'].length; i++){
-			var key = adjList[vertex]['adjacency'][i];
-			if(key in adjList){
-				var obj = [pos, adjList[key]['pos']];
-				lines.push(obj);
-			}
-		}//End of for loop
-	}//End of for loop
-	//clean up lines and remove any lines that is outside of the canvas
-	for(var i = 0; i < lines.length; i++){
-		var start = lines[i][0];
-		var end = lines[i][1];
-		if(start[0]>end[0]){
-			//switch the arrays
-			var temp = end;
-			end = start;
-			start = temp;
-		}
-		//check if within the area
-		if(end[0] >= clip['left'] && Math.max(start[1], end[1]) >= clip['top'] && Math.min(start[1], end[1]) < clip['bottom'] && start[0] < clip['right']){
-			//console.log("clipping started");
-			//var returned = clipLine(start, end, clip);
-			//start = returned[0];
-			//end = returned[1];
-			//console.log("return: " + start + " " + end);
-			if(start[0] != end[0] || start[1] != end[1]){ //check if line is not reduced to a point or simply too small
-				var obj = ['line', Math.floor((start[0]-clip['left'])*xscale), Math.floor((start[1]-clip['top'])*yscale), Math.floor((end[0]-clip['left'])*xscale), Math.floor((end[1]-clip['top'])*yscale)];
-				renderlist.unshift(obj);
-			}
-			
-		}
-	}//End of for loop
-	for(var i = 0; i < renderlist.length; i++){
-		//console.log(renderlist[i]);
-		if(renderlist[i][0] == 'circle'){
-			drawCircle(ctx, renderlist[i][1], renderlist[i][2], scale);
-		}else if(renderlist[i][0] == 'line'){
-			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
-		}
-	}//End of for loop
-	//insert text
-	if(live){
-		ctx.font="30px Verdana";
-		ctx.fillStyle = 'black';
-		ctx.fillText("simulation",5,30);
-	}
-}
+*/
