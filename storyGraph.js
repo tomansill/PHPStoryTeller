@@ -1,16 +1,19 @@
 $('document').ready(function(){
 	initialize();
 });
-var adjList = {"v1": {"adjacency": ["v2", "v3", "v4"],"pos": [10,10]},"v2": {"adjacency": ["v3","v4"],"pos": [100,40]}, "v3": { "adjacency": ["v2","v4"],"pos": [60,100]},"v4": {"adjacency": ["v2","v3","v1"],"pos": [100,100]}};
+var adjListomp= {"v1": {"adjacency": ["v2", "v3", "v4"],"pos": [10,10]},"v2": {"adjacency": ["v3","v4"],"pos": [100,40]}, "v3": { "adjacency": ["v2","v4"],"pos": [60,100]},"v4": {"adjacency": ["v2","v3","v1"],"pos": [100,100]}};
 var context;
 var mouseup = true;
 var mouseOver = false;
 var oldMousePos;
 var width;
 var height;
+var frames = 0;
 var clip = {"top":0, "right":0, "bottom":0, "left":0};
+var live = false;
 function initialize(){
 	console.log(adjList);
+	console.log(adjListomp);
 	var element = document.getElementById("mainCanvas");
 	context = element.getContext("2d");
 	width = context.canvas.width;
@@ -25,7 +28,24 @@ function initialize(){
 	element.addEventListener("mouseout", doMouseOut, false);
 	element.addEventListener("mousewheel", doMouseWheel, false);
 	element.addEventListener("DOMMouseScroll", doMouseWheel, false);
+	window.addEventListener("keydown", keyboardPress, false);
 	render(context, clip);
+	setInterval(function(){update();}, 1000/60);
+}
+function update(){
+	if(live){
+		//physics simulation
+		for(var key in adjList){
+			for(var target in adjList){
+				if(key != target){
+						
+				}
+			}//End of for loop
+		}//End of for loop
+		//update
+		//draw
+		render(context, clip);	
+	}
 }
 function doMouseDown(event){
 	mouseup = false;
@@ -39,6 +59,10 @@ function doMouseMove(event){
 		oldMousePos[1] = event.pageY;
 		translateClip(-dx, -dy);
 	}
+}
+function keyboardPress(event){
+	if(live) live = false;
+	else live = true;	
 }
 function doMouseUp(event){
 	mouseup = true;
@@ -178,15 +202,19 @@ function render(ctx, clip){
 	var yscale = height/(clip['bottom'] - clip['top']);
 	for(var vertex in adjList){
 		var pos = adjList[vertex]['pos'];
+		//vertex
 		if(pos[0]+10 >= clip['left'] && pos[0]-10 < clip['right'] && pos[1]+10 >= clip['top'] && pos[1]-10 < clip['bottom']){
 			var x = Math.floor((pos[0] - clip['left'])*xscale);
 			var y = Math.floor((pos[1] - clip['top'])*yscale);
 			renderlist.push(['circle', x, y]);
 		}
+		//edge
 		for(var i = 0; i < adjList[vertex]['adjacency'].length; i++){
 			var key = adjList[vertex]['adjacency'][i];
-			var obj = [adjList[vertex]['pos'], adjList[key]['pos']];
-			lines.push(obj);
+			if(key in adjList){
+				var obj = [pos, adjList[key]['pos']];
+				lines.push(obj);
+			}
 		}//End of for loop
 	}//End of for loop
 	//clean up lines and remove any lines that is outside of the canvas
@@ -221,4 +249,11 @@ function render(ctx, clip){
 			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
 		}
 	}//End of for loop
+	//insert text
+	if(true){
+		ctx.font="30px Verdana";
+		ctx.fillStyle = 'black';
+		ctx.fillText("frame: " + frames,5,30);
+		frames++;
+	}
 }
