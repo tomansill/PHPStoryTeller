@@ -69,17 +69,14 @@ function scaleClip(delta){
 	var zoomLevel = 20;
 	var x = (clip['right'] - clip['left'])/2;
 	var y = (clip['bottom'] - clip['top'])/2;
-	console.log("width: " + x + " height " + y);
-	x += (zoomLevel*delta);
-	y += (zoomLevel*delta);
+	var xzoomLevel = zoomLevel;
+	var yzoomLevel = (y/x)*zoomLevel;
+	x += (xzoomLevel*delta);
+	y += (yzoomLevel*delta);
 	clip['left'] = (clip['left'] + ((clip['right'] - clip['left'])/2)) - x;
 	clip['right'] = (clip['right'] - ((clip['right'] - clip['left'])/2)) + x;
 	clip['top'] = (clip['top'] + ((clip['bottom'] - clip['top'])/2)) - y;
 	clip['bottom'] = (clip['bottom'] - ((clip['bottom'] - clip['top'])/2)) + y;
-	//clip['left'] += ((clip['right'] - clip['left'])/2) - x;
-	//clip['right'] -= ((clip['right'] - clip['left'])/2) - x;
-	//clip['top'] += ((clip['bottom'] - clip['top'])/2) - y;
-	//clip['bottom'] -= ((clip['bottom'] - clip['top'])/2) - y;
 	render(context, clip);
 }
 function drawCircle(ctx, x, y, scale){
@@ -94,12 +91,12 @@ function drawCircle(ctx, x, y, scale){
 	ctx.fillStyle="white";
 	ctx.fill();	
 }
-function drawLine(ctx, x0, y0, x1, y1){
+function drawLine(ctx, x0, y0, x1, y1, scale){
 	ctx.beginPath();
 	ctx.lineTo(x0, y0);
 	ctx.lineTo(x1, y1);
 	ctx.strokeStyle='black';
-	ctx.lineWidth = 5;
+	ctx.lineWidth = 2*scale;
 	ctx.stroke();
 }
 
@@ -221,7 +218,7 @@ function render(ctx, clip){
 		if(renderlist[i][0] == 'circle'){
 			drawCircle(ctx, renderlist[i][1], renderlist[i][2], scale);
 		}else if(renderlist[i][0] == 'line'){
-			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4]);
+			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
 		}
 	}//End of for loop
 }
