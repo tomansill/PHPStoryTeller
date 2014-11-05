@@ -5,7 +5,7 @@ $count = 0;
 foreach($source as $key => $value){
 	$obj = array(
 		"adjacency" => [],
-		"pos" => [$count*50,0],
+		"pos" => [($count%4)*50, floor($count/4)*50],
 		"force" => [0,0],
 		"velocity" => [0,0]
 	);

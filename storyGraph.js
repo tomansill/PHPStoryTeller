@@ -1,19 +1,18 @@
 $('document').ready(function(){
 	initialize();
 });
-var adjListomp= {"v1": {"adjacency": ["v2", "v3", "v4"],"pos": [10,10]},"v2": {"adjacency": ["v3","v4"],"pos": [100,40]}, "v3": { "adjacency": ["v2","v4"],"pos": [60,100]},"v4": {"adjacency": ["v2","v3","v1"],"pos": [100,100]}};
+//var adjListomp= {"v1": {"adjacency": ["v2", "v3", "v4"],"pos": [10,10]},"v2": {"adjacency": ["v3","v4"],"pos": [100,40]}, "v3": { "adjacency": ["v2","v4"],"pos": [60,100]},"v4": {"adjacency": ["v2","v3","v1"],"pos": [100,100]}};
+//adjList = {"v1": {"adjacency": ["v2", "v3"],"pos": [140,120],"force": [0,0],"velocity": [0,0]}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0]}, "v3": {"adjacency": ["v1", "v2"],"pos":[120,50],"force": [0,0],"velocity": [0,0]}};
 var context;
 var mouseup = true;
 var mouseOver = false;
 var oldMousePos;
 var width;
 var height;
-var frames = 0;
 var clip = {"top":0, "right":0, "bottom":0, "left":0};
 var live = false;
 function initialize(){
 	console.log(adjList);
-	console.log(adjListomp);
 	var element = document.getElementById("mainCanvas");
 	context = element.getContext("2d");
 	width = context.canvas.width;
@@ -35,14 +34,87 @@ function initialize(){
 function update(){
 	if(live){
 		//physics simulation
+		var undirectedLines = new Array();
 		for(var key in adjList){
+			console.log("key: " + key + " pos: " + adjList[key]['pos']);
+			//physics simulation on each vertices
 			for(var target in adjList){
 				if(key != target){
-						
+					console.log("target: " + target);
+					//calculate distance between two vertices		
+					var x = adjList[key]['pos'][0] - adjList[target]['pos'][0];
+					var y = adjList[key]['pos'][1] - adjList[target]['pos'][1];
+					//console.log("x: " + x + " y: " + y);
+					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+					//console.log("distance between " + key + " and " + target + " is " + dist);
+					//repulsive force, find amount of force
+					var force = (1/dist);
+					var deg = Math.atan(y/x);
+					//console.log("force: " + force + " deg: " + (deg*57.2957795));
+					var dispx = force*Math.cos(deg);
+					var dispy = force*Math.sin(deg);
+					if(x < 0 && y < 0){
+						dispx *= -1;
+						dispy *= -1;
+					}
+					//console.log("repulsive displacement in x: " + dispx + " y: " + dispy);
+					//add force
+					adjList[key]['force'] = [adjList[key]['force'][0]+dispx, adjList[key]['force'][1]+dispy];
 				}
 			}//End of for loop
+			//physics simulation on each edge of vertex
+			for(var i = 0; i < adjList[key]['adjacency'].length; i++){
+				var target = adjList[key]['adjacency'][i];
+				if(target in adjList){
+					if(![key, target] in undirectedLines && ![target, key] in undirectedLines){
+						undirectedLines[[key, target]] = 1;
+						//console.log("adjacency");
+						//sometimes people didn't finish developing keys after they added a key in adjacency list
+						//calculate distance
+						var x = adjList[key]['pos'][0] - adjList[target]['pos'][0];
+						var y = adjList[key]['pos'][1] - adjList[target]['pos'][1];
+						//console.log("x: " + x + " y: " + y);
+						var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+						console.log("distance between " + key + " and " + target + " is " + dist);
+						//attractive force, find amount of force
+						//var force = Math.sqrt(dist/100);;
+						var force = dist*0.001;
+						var deg = Math.atan(y/x);
+						//console.log("force: " + force + " deg: " + (deg*57.2957795));
+						var dispx = -force*Math.cos(deg);
+						var dispy = -force*Math.sin(deg);
+						if(x < 0 && y < 0){
+							dispx *= -1;
+							dispy *= -1;
+						}
+						console.log("attraction displacement in x: " + dispx + " y: " + dispy);
+						//add force
+						adjList[key]['force'] = [adjList[key]['force'][0]+dispx, adjList[key]['force'][1]+dispy];
+						adjList[target]['force'] = [adjList[target]['force'][0]-dispx, adjList[target]['force'][1]-dispy];
+					}
+				}
+			}//End of for loop
+			console.log("force: " + adjList[key]['force']);
 		}//End of for loop
 		//update
+		for(var key in adjList){
+			//add velocity
+			adjList[key]['velocity'][0] += adjList[key]['force'][0];
+			adjList[key]['velocity'][1] += adjList[key]['force'][1];
+			//apply some friction
+			var fricx = Math.abs(adjList[key]['velocity'][0]) - 0.01;
+			var fricy = Math.abs(adjList[key]['velocity'][0]) - 0.01;
+			if(fricx < 0) fricx = 0;
+			if(fricy < 0) fricy = 0;
+			if(adjList[key]['velocity'][0] < 0) fricx *= -1;
+			if(adjList[key]['velocity'][1] < 0) fricy *= -1;
+			adjList[key]['velocity'][0] = fricx;
+			adjList[key]['velocity'][1] = fricy;
+			//move the vertex
+			adjList[key]['pos'][0] += (adjList[key]['velocity'][0])*(1000/60);
+			adjList[key]['pos'][1] += (adjList[key]['velocity'][1])*(1000/60);
+			adjList[key]['force'] = [0,0];
+		}//End of for loop
 		//draw
 		render(context, clip);	
 	}
@@ -63,6 +135,7 @@ function doMouseMove(event){
 function keyboardPress(event){
 	if(live) live = false;
 	else live = true;	
+	render(context, clip);
 }
 function doMouseUp(event){
 	mouseup = true;
@@ -250,10 +323,9 @@ function render(ctx, clip){
 		}
 	}//End of for loop
 	//insert text
-	if(true){
+	if(live){
 		ctx.font="30px Verdana";
 		ctx.fillStyle = 'black';
-		ctx.fillText("frame: " + frames,5,30);
-		frames++;
+		ctx.fillText("simulation",5,30);
 	}
 }
