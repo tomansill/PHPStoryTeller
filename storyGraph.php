@@ -1,22 +1,26 @@
 <?php
-$source = json_decode(file_get_contents('sample.json'), true);;
-$graph = array();
-$count = 0;
-foreach($source as $key => $value){
-	$obj = array(
-		"adjacency" => [],
-		"pos" => [($count%4)*150, floor($count/4)*250],
-		"force" => [0,0],
-		"velocity" => [0,0],
-		"color" => 'white'
-	);
-	$count = $count + 1;
-	if($key == 'start') $obj['color'] = 'green';
-	for($i = 0; $i < count($value['options']); $i++){
-		$insert = $value['options'][$i][1];
-		array_push($obj['adjacency'], $insert);
-	}//End of for loop
-	$graph[$key] = $obj;
+if($_GET['story'] == null) header("Location: storyEditor.php");
+else{
+	$source = json_decode(file_get_contents("stories/" . $_GET['story']), true);;
+	if($source == null)  header("Location: storyEditor.php");
+	$graph = array();
+	$count = 0;
+	foreach($source['content'] as $key => $value){
+		$obj = array(
+			"adjacency" => [],
+			"pos" => [($count%4)*150, floor($count/4)*250],
+			"force" => [0,0],
+			"velocity" => [0,0],
+			"color" => 'white'
+		);
+		$count = $count + 1;
+		if($key == 'start') $obj['color'] = 'green';
+		for($i = 0; $i < count($value['options']); $i++){
+			$insert = $value['options'][$i][1];
+			array_push($obj['adjacency'], $insert);
+		}//End of for loop
+		$graph[$key] = $obj;
+	}
 }//End of for loop
 ?>
 <!DOCTYPE html>

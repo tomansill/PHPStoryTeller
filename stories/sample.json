@@ -1,0 +1,116 @@
+{
+    "title": "Sample Story",
+    "content": {
+        "goWithPaul": {
+            "body": "You decided to go with Paul. Paul and you climbed over the metal fence and entered the yard. Paul and you has arrived at the front door of the house. There's a doorbell on the doorframe. Paul grabbed for the doorknob and struggled to turn the handle. Paul asks you to help him to get the door open.",
+            "options": [
+                [
+                    "Help Paul",
+                    "helpPaul"
+                ],
+                [
+                    "Ring the doorbell",
+                    "ringthedoorbell"
+                ],
+                [
+                    "Go around the house",
+                    "aroundthehouse"
+                ]
+            ]
+        },
+        "stopPaul": {
+            "body": "'Paul, it's bad idea. Trespassing is illegal. I don't want to risk getting in trouble', you said to Paul. Paul said, 'Don't be a scaredy cat, come with me. It will be fine.'",
+            "options": [
+                [
+                    "Go with Paul",
+                    "goWithPaul"
+                ]
+            ]
+        },
+        "helpPaul": {
+            "body": "You decided to help Paul. You tried to turn the handle but you couldn't get the door to open. Perhaps you can get it to open with some force.",
+            "options": [
+                [
+                    "Open the door with force",
+                    "opendoorwithforce"
+                ],
+                [
+                    "Ring the doorbell",
+                    "ringthedoorbell"
+                ],
+                [
+                    "Go around the house",
+                    "aroundthehouse"
+                ]
+            ]
+        },
+        "opendoorwithforce": {
+            "body": "You told Paul to stand aside as you force the door open. Paul stood aside and you prepare to kick the door open. You kicked at the door. The door swung open. Paul and you froze, expecting for something to happen. Nothing is happening. You told Paul to go in first. Paul hesitated for a moment then he walks slowly in the house. The rotting wooden floor under Paul collapses and Paul falls through. You tried to grab Paul but it was too late. Paul has fallen in the dark abyss. You hear Paul collided with the bottom. You yelled Paul's name. You hear Paul groaning at the bottom of the abyss. 'Paul! Are you okay? Are you hurt?' You hear 'I'm okay. Something broke my fall. It's so dark down here. Can you help me to find a way out of here? You respond, 'I'll look for a way to get you out. You scanned the house. You see a staircase leading to second floor, hallway leading to the back of the house, and a open doorway that you just kicked open.",
+            "options": [
+                [
+                    "Go up the stairs",
+                    "paulfallengoup"
+                ],
+                [
+                    "Walk through the hallway",
+                    "paulfallenhallway"
+                ],
+                [
+                    "Go to the outside and call for rescue",
+                    "paulfallengooutside"
+                ],
+                [
+                    "Jump into the hole and join Paul",
+                    "paulfallenjoin"
+                ]
+            ]
+        },
+        "ringthedoorbell": {
+            "body": "'Let's ring the doorbell', you said. Paul looks bewildered as you pressed the doorbell button. The door fell down to the door. Paul and you froze and expecting something to happen but nothing has happened. Paul and you entered the house. You see a hallway leading to the back of the house and staircase leading to second floor",
+            "options": [
+                [
+                    "Go up the stairs",
+                    "goup"
+                ],
+                [
+                    "Walk through the hallway",
+                    "hallway"
+                ],
+                [
+                    "Go to the outside",
+                    "outside"
+                ]
+            ]
+        },
+        "start": {
+            "body": "You have left your work and walking to your house down the street, you noticed your co-worker Paul standing and watching at an abandoned house. You talk to Paul. Paul said he wants to go in that house and find out what's inside",
+            "options": [
+                [
+                    "Go with Paul",
+                    "goWithPaul"
+                ],
+                [
+                    "Urge Paul to not go",
+                    "stopPaul"
+                ]
+            ]
+        },
+        "aroundthehouse": {
+            "body": "You tell Paul to go around the house and scout the area. You find an opened basement door in the back of the house. There's a back door that you could try to enter. There's a barn in a distance from the house.",
+            "options": [
+                [
+                    "Go to basement",
+                    "gobasement"
+                ],
+                [
+                    "Use the back door",
+                    "backdoor"
+                ],
+                [
+                    "Go to the barn",
+                    "goToBarn"
+                ]
+            ]
+        }
+    }
+}

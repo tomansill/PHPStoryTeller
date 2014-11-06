@@ -1,0 +1,9 @@
+{
+    "title": "newStory",
+    "content": {
+        "start": {
+            "body": "beginning of the story",
+            "options": []
+        }
+    }
+}
