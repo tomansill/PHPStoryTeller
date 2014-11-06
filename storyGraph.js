@@ -1,14 +1,15 @@
 $('document').ready(function(){
 	initialize();
 });
-adjList = {"v1": {"adjacency": ["v2", "v3"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}, "v3": {"adjacency": ["v1", "v2"],"pos":[140,100],"force": [0,0],"velocity": [0,0], "color":"red"}};
+//adjList = {"v1": {"adjacency": ["v2", "v3"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}, "v3": {"adjacency": ["v1", "v2", "v4"],"pos":[140,100],"force": [0,0],"velocity": [0,0], "color":"red"}, "v4": {"adjacency": ["v3"],"pos":[10,100],"force": [0,0],"velocity": [0,0], "color":"green"}};
 //adjList = {"v1": {"adjacency": ["v2"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}};
 var context;
-var mouseup = true;
+var mouseDownOn = null;
 var mouseOver = false;
 var oldMousePos;
 var width;
 var height;
+var frameCount = 0;
 var clip = {"top":0, "right":0, "bottom":0, "left":0};
 var live = false;
 function initialize(){
@@ -34,67 +35,71 @@ function initialize(){
 function update(){
 	if(live){
 		//physics simulation
-		var undirectedLines = new Array();
-		console.log("frame");
+		for(var key in adjList) adjList[key]['force'] = [0,0];
+		var edgeList = new Array();
 		for(var key in adjList){
-			//physics simulation on each vertices
-			//console.log("repulsion");
 			for(var target in adjList){
-				if(key != target && (adjList[key]['pos'][0] < adjList[target]['pos'][0] || (adjList[key]['pos'][0] == adjList[target]['pos'][0] && adjList[key]['pos'][1] <= adjList[target]['pos'][1]))){
-					var x = adjList[target]['pos'][0] - adjList[key]['pos'][0];
-					var y = adjList[target]['pos'][1] - adjList[key]['pos'][1];
-					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y,2));
-					var force = 1/Math.pow(dist,2);
-					var fx = (x*force)/dist;
-					var fy = (y*force)/dist;
-					//console.log("origin: " + key + " target: " + target + " x: " + x + " y: " + y + " dist: " + dist);
-					//console.log("force: " + force + " fx: " + fx + " fy: " + fy);
-					//adjList[key]['force'] = [adjList[key]['force'][0]-fx, adjList[key]['force'][1]-fy];
-					//adjList[target]['force'] = [adjList[target]['force'][0]+fx, adjList[target]['force'][1]+fy];
+				if(key != target){
+					//get height and width
+					var x = adjList[target]['pos'][0] - adjList[key]['pos'][0];		
+					var y = adjList[target]['pos'][1] - adjList[key]['pos'][1];		
+					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+					var force = 100000*(1/Math.pow(dist,2));
+					var xforce = (x*force)/dist; 
+					var yforce = (y*force)/dist; 
+					adjList[key]['force'] = [adjList[key]['force'][0]-xforce,adjList[key]['force'][1]-yforce];
 				}
-			}//End of for loop
-			//physics simulation on each edge
-			//console.log("attractive");
+			}//End of for loop	
 			for(var i = 0; i < adjList[key]['adjacency'].length; i++){
 				var target = adjList[key]['adjacency'][i];
-				if(key != target && (adjList[key]['pos'][0] < adjList[target]['pos'][0] || (adjList[key]['pos'][0] == adjList[target]['pos'][0] && adjList[key]['pos'][1] <= adjList[target]['pos'][1]))){
-					var x = adjList[target]['pos'][0] - adjList[key]['pos'][0];
-					var y = adjList[target]['pos'][1] - adjList[key]['pos'][1];
-					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y,2));
-					var force = dist*0.0000002;
-					var fx = -(x*force)/dist;
-					var fy = -(y*force)/dist;
-					console.log("origin: " + key + " target: " + target + " x: " + x + " y: " + y + " dist: " + dist);
-					console.log("force: " + force + " fx: " + fx + " fy: " + fy);
-					adjList[key]['force'] = [adjList[key]['force'][0]-fx, adjList[key]['force'][1]-fy];
-					adjList[target]['force'] = [adjList[target]['force'][0]+fx, adjList[target]['force'][1]+fy];
+				if(target in adjList && !([adjList[key]['pos'], adjList[target]['pos']] in edgeList || [adjList[target]['pos'], adjList[key]['pos']] in edgeList)){
+					edgeList[[adjList[key]['pos'], adjList[target]['pos']]] = 1;
+					var x = adjList[target]['pos'][0] - adjList[key]['pos'][0];		
+					var y = adjList[target]['pos'][1] - adjList[key]['pos'][1];		
+					var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+					var force = -dist*0.2;
+					var xforce = (x*force)/dist; 
+					var yforce = (y*force)/dist; 
+					adjList[key]['force'] = [adjList[key]['force'][0]-xforce,adjList[key]['force'][1]-yforce];
+					adjList[target]['force'] = [adjList[target]['force'][0]+xforce,adjList[target]['force'][1]+yforce];
 				}
-			}//End of for loop
+			}
 		}//End of for loop
 		//update
 		for(var key in adjList){
+			//show me force
+			console.log("key: " + key + " force:" + adjList[key]['force']);
+			//console.log("coord: " + adjList[key]['pos']);
 			//add velocity
-			adjList[key]['velocity'][0] += adjList[key]['force'][0];
-			adjList[key]['velocity'][1] += adjList[key]['force'][1];
+			adjList[key]['velocity'][0] += (adjList[key]['force'][0]/100);
+			adjList[key]['velocity'][1] += (adjList[key]['force'][1]/100);
+			//add friction
+			var fricCoeff = 0.008;
+			var fricx = Math.abs(adjList[key]['velocity'][0]) - (fricCoeff*Math.abs(adjList[key]['force'][0])); 
+			var fricy = Math.abs(adjList[key]['velocity'][1]) - (fricCoeff*Math.abs(adjList[key]['force'][1])); 
+			if(fricx < 0) fricx = 0;
+			if(fricy < 0) fricy = 0;
+			if(adjList[key]['velocity'][0] < 0) fricx *= -1; 
+			if(adjList[key]['velocity'][1] < 0) fricy *= -1; 
+			adjList[key]['velocity'][0] = fricx;
+			adjList[key]['velocity'][1] = fricy;
 			//move the vertex
 			adjList[key]['pos'][0] += (adjList[key]['velocity'][0])*(1000/60);
 			adjList[key]['pos'][1] += (adjList[key]['velocity'][1])*(1000/60);
 		}//End of for loop
 		//draw
 		render(context, clip);	
+		frameCount++;
 	}
 }
-function doMouseDown(event){
-	mouseup = false;
-	oldMousePos = [event.pageX, event.pageY];
-}
 function doMouseMove(event){
-	if(!mouseup){
+	if(mouseDownOn != null){
 		var dx = event.pageX - oldMousePos[0];
 		var dy = event.pageY - oldMousePos[1];
 		oldMousePos[0] = event.pageX;
 		oldMousePos[1] = event.pageY;
-		translateClip(-dx, -dy);
+		if(mouseDownOn == true) translateClip(-dx, -dy);
+		else translateVertex(mouseDownOn, dx, dy);
 	}
 }
 function keyboardPress(event){
@@ -102,8 +107,24 @@ function keyboardPress(event){
 	else live = true;	
 	render(context, clip);
 }
+function doMouseDown(event){
+	oldMousePos = [event.pageX, event.pageY];
+	var scale = Math.min(width/(clip['right']-clip['left']), height/(clip['bottom']-clip['top']));
+	//get surface
+	for(var key in adjList){
+		var pos = adjList[key]['pos'];
+		var x = event.pageX - ((pos[0] - clip['left'])*(width/(clip['right']-clip['left'])));
+		var y = event.pageY - ((pos[1] - clip['top'])*(height/(clip['bottom']-clip['top'])));
+		var dist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+		//console.log("key: " + key + " x: " + x + " y: " + y + " dist: " + dist); 
+		if(dist < 20*scale){
+			mouseDownOn = key;
+		}
+	}
+	if(mouseDownOn == null) mouseDownOn = true;
+}
 function doMouseUp(event){
-	mouseup = true;
+	mouseDownOn = null;
 }
 function doMouseOver(event){
 	mouseOver = true;
@@ -116,6 +137,14 @@ function doMouseWheel(event){
 		var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
 		scaleClip(delta);
 	}
+}
+function translateVertex(key, dx, dy){
+	var scale = Math.min(width/(clip['right']-clip['left']), height/(clip['bottom']-clip['top']));
+	dx /= scale;
+	dy /= scale;
+	adjList[key]['pos'][0] += dx;	
+	adjList[key]['pos'][1] += dy;	
+	render(context, clip);
 }
 function translateClip(dx, dy){
 	var scale = Math.min(width/(clip['right']-clip['left']), height/(clip['bottom']-clip['top']));
@@ -162,8 +191,8 @@ function drawLine(ctx, x0, y0, x1, y1, scale){
 	ctx.stroke();
 }
 function drawDebugArrow(ctx, x0, y0, dx, dy){
-	dx *= 5000000;
-	dy *= 5000000;
+	//dx *= 5000000;
+	//dy *= 5000000;
 	//console.log("draw x: " + x0 + " y: " + y0 + " dx: " + dx + " dy: " + dy);
 	ctx.beginPath();
 	ctx.lineTo(x0, y0);
@@ -256,7 +285,7 @@ function clipLine(start, end, clip){
 		if(end[0] > clip['right']) end[0] = clip['right'];
 		if(end[0] < clip['left']) end[0] = clip['left'];
 		if(start[0] > clip['right']) start[0] = clip['right'];
-		console.log("horiz " + start + " " + end);
+		//console.log("horiz " + start + " " + end);
 	}else{
 		//start with the easy part
 		if(end[0] >= clip['right']){
