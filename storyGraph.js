@@ -3,24 +3,17 @@ $('document').ready(function(){
 });
 //adjList = {"v1": {"adjacency": ["v2", "v3"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}, "v3": {"adjacency": ["v1", "v2", "v4"],"pos":[140,100],"force": [0,0],"velocity": [0,0], "color":"red"}, "v4": {"adjacency": ["v3"],"pos":[10,100],"force": [0,0],"velocity": [0,0], "color":"green"}};
 //adjList = {"v1": {"adjacency": ["v2"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}};
-var context;
+var ctx;
 var mouseDownOn = null;
 var mouseOver = false;
 var oldMousePos;
 var width;
 var height;
-var frameCount = 0;
 var clip = {"top":0, "right":0, "bottom":0, "left":0};
-var live = false;
+var simulation = false;
 function initialize(){
-	console.log(adjList);
 	var element = document.getElementById("mainCanvas");
-	context = element.getContext("2d");
-	width = context.canvas.width;
-	height = context.canvas.height;
-	clip['right'] = width;
-	clip['bottom'] = height;
-	console.log(clip);
+	ctx = element.getContext("2d");
 	element.addEventListener("mousedown", doMouseDown, false);
 	element.addEventListener("mouseup", doMouseUp, false);
 	element.addEventListener("mousemove", doMouseMove, false);
@@ -29,11 +22,20 @@ function initialize(){
 	element.addEventListener("mousewheel", doMouseWheel, false);
 	element.addEventListener("DOMMouseScroll", doMouseWheel, false);
 	window.addEventListener("keydown", keyboardPress, false);
-	render(context, clip);
-	setInterval(function(){update();}, 1000/60);
+	window.addEventListener('resize', resizeCanvas, false);
+	width = window.innerWidth;
+	height = window.innerHeight;
+	clip['right'] = window.innerWidth;
+	clip['bottom'] = window.innerHeight;
+	centerClip();
+	centerGraph();
+	resizeCanvas();
+	render();
+	simulation = true;
+	setInterval(function(){simulate();}, 1000/60);
 }
-function update(){
-	if(live){
+function simulate(){
+	if(simulation){
 		//physics simulation
 		for(var key in adjList) adjList[key]['force'] = [0,0];
 		var edgeList = new Array();
@@ -66,10 +68,8 @@ function update(){
 			}
 		}//End of for loop
 		//update
+		var continueSim = true;
 		for(var key in adjList){
-			//show me force
-			console.log("key: " + key + " force:" + adjList[key]['force']);
-			//console.log("coord: " + adjList[key]['pos']);
 			//add velocity
 			adjList[key]['velocity'][0] += (adjList[key]['force'][0]/100);
 			adjList[key]['velocity'][1] += (adjList[key]['force'][1]/100);
@@ -83,13 +83,23 @@ function update(){
 			if(adjList[key]['velocity'][1] < 0) fricy *= -1; 
 			adjList[key]['velocity'][0] = fricx;
 			adjList[key]['velocity'][1] = fricy;
+			//check if graph stopped moving
+			var sensitivity = 0.0001
+			if((adjList[key]['velocity'][0] > sensitivity ||  adjList[key]['velocity'][0] < -sensitivity) 
+				&& (adjList[key]['velocity'][1] > sensitivity || adjList[key]['velocity'][1] < -sensitivity)){
+				if((adjList[key]['force'][0] > sensitivity ||  adjList[key]['force'][0] < -sensitivity) 
+					&& (adjList[key]['force'][1] > sensitivity || adjList[key]['force'][1] < -sensitivity)){
+					continueSim = false;
+				}
+			}
 			//move the vertex
 			adjList[key]['pos'][0] += (adjList[key]['velocity'][0])*(1000/60);
 			adjList[key]['pos'][1] += (adjList[key]['velocity'][1])*(1000/60);
 		}//End of for loop
+		//stop simulation if graph stopped moving
+		if(continueSim) simulation = false;
 		//draw
-		render(context, clip);	
-		frameCount++;
+		render();	
 	}
 }
 function doMouseMove(event){
@@ -103,9 +113,9 @@ function doMouseMove(event){
 	}
 }
 function keyboardPress(event){
-	if(live) live = false;
-	else live = true;	
-	render(context, clip);
+	if(simulation) simulation = false;
+	else simulation = true;	
+	render();
 }
 function doMouseDown(event){
 	oldMousePos = [event.pageX, event.pageY];
@@ -144,7 +154,7 @@ function translateVertex(key, dx, dy){
 	dy /= scale;
 	adjList[key]['pos'][0] += dx;	
 	adjList[key]['pos'][1] += dy;	
-	render(context, clip);
+	render();
 }
 function translateClip(dx, dy){
 	var scale = Math.min(width/(clip['right']-clip['left']), height/(clip['bottom']-clip['top']));
@@ -154,7 +164,7 @@ function translateClip(dx, dy){
 	clip['right'] += dx;
 	clip['top'] += dy;
 	clip['bottom'] += dy;
-	render(context, clip);
+	render();
 }
 function scaleClip(delta){
 	var zoomLevel = 20;
@@ -168,7 +178,7 @@ function scaleClip(delta){
 	clip['right'] = (clip['right'] - ((clip['right'] - clip['left'])/2)) + x;
 	clip['top'] = (clip['top'] + ((clip['bottom'] - clip['top'])/2)) - y;
 	clip['bottom'] = (clip['bottom'] - ((clip['bottom'] - clip['top'])/2)) + y;
-	render(context, clip);
+	render();
 }
 function drawCircle(ctx, x, y, scale, color){
 	ctx.beginPath();
@@ -200,8 +210,50 @@ function drawDebugArrow(ctx, x0, y0, dx, dy){
 	ctx.strokeStyle="red";
 	ctx.stroke();	
 }
+function resizeCanvas(){
+	var widthDiff = window.innerWidth - width;
+	var heightDiff = window.innerHeight - height;
+	width = window.innerWidth;
+	height = window.innerHeight;
+	ctx.canvas.width = width;
+	ctx.canvas.height = height;
+	clip['right'] += widthDiff/2;
+	clip['bottom'] += heightDiff/2;;
+	clip['left'] -= widthDiff/2;
+	clip['top'] -= heightDiff/2;;
+	render();
+}
+function centerClip(){
+	clip['right'] = width/2;
+	clip['left'] = -width/2;
+	clip['bottom'] = height/2;
+	clip['top'] = -height/2;
+}
+function centerGraph(){
+	var leftpoint = null;
+	var rightpoint = null;
+	var toppoint = null;
+	var bottompoint = null;
+	for(var key in adjList){
+		var pos = adjList[key]['pos'];
+		if(leftpoint == null)	leftpoint = pos[0];
+		else leftpoint = Math.min(leftpoint, pos[0]);
+		if(rightpoint == null)	rightpoint = pos[0];
+		else rightpoint = Math.max(rightpoint, pos[0]);
+		if(toppoint == null)	toppoint = pos[1];
+		else toppoint = Math.min(toppoint, pos[1]);
+		if(bottompoint == null)	bottompoint = pos[1];
+		else bottompoint = Math.max(bottompoint, pos[1]);	
+	}
+	var x = (rightpoint - leftpoint)/2;
+	var y = (bottompoint - toppoint)/2;
+	for(var key in adjList){
+		adjList[key]['pos'][0] -= x;	
+		adjList[key]['pos'][1] -= y;	
+	}
+}
 
-function render(ctx, clip){
+function render(){
 	//background
 	ctx.fillStyle='#FFFFFF';
 	ctx.fillRect(0,0,width,height);
@@ -255,14 +307,14 @@ function render(ctx, clip){
 	for(var i = 0; i < renderlist.length; i++){
 		//console.log(renderlist[i]);
 		if(renderlist[i][0] == 'circle'){
-			drawDebugArrow(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][4][0], renderlist[i][4][1]);
+			//drawDebugArrow(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][4][0], renderlist[i][4][1]);
 			drawCircle(ctx, renderlist[i][1], renderlist[i][2], scale, renderlist[i][3]);
 		}else if(renderlist[i][0] == 'line'){
 			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
 		}
 	}//End of for loop
 	//insert text
-	if(live){
+	if(simulation){
 		ctx.font="30px Verdana";
 		ctx.fillStyle = 'black';
 		ctx.fillText("simulation",5,30);
