@@ -209,35 +209,36 @@ function drawDebugArrow(ctx, x0, y0, dx, dy){
 	ctx.stroke();	
 }
 function drawArrowhead(ctx, x0, y0, x1, y1, scale){
-	//console.log("arrowhead function start x0: " + x0 + " y0: " + y0 + " x1: " + x1 + " y1: " + y1);
 	//find location on edge of circle
 	var x = x1 - x0;
 	var y = y1 - y0;
 	var h = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-	//console.log("x: " + x + " y: " + y + " h: " + h);
 	var newX = (10*scale*x)/h;
 	var newY = (10*scale*y)/h;
-	//console.log("newX: " + newX + " newY: " + newY);
 	ctx.beginPath();
 	ctx.lineTo(x0 + (x-newX), y0 + (y-newY));
-	//console.log("first point: x: " + (x-newX) + " y: " + (y-newY)); 
 	//now find point down the line a little
-	newX = (20*scale*x)/h;
-	newY = (20*scale*y)/h;
-	//console.log("newX: " + newX + " newY: " + newY);
-	x -= newX;
-	y -= newY;
-	//console.log("updated x: " + x + " y: " + y + " h: " + h);
-	//go to next point where corner of arrow will be located at 
-	newX = (5*scale*x)/h;
-	newY = (5*scale*y)/h;
-	//console.log("newX: " + newX + " newY: " + newY);
-	ctx.lineTo(x0 + (x-newX), y0 + (y+newY));
-	//console.log("second point: x: " + (x-newX) + " y: " + (y-newY)); 
-	//find the last point
-	ctx.lineTo(x0 + (x+newX), y0 + (y-newY));
-	//console.log("final point: x: " + (x-newX) + " y: " + (y-newY)); 
-	//console.log(" ");
+	var newXo = (20*scale*x)/h;
+	var newYo = (20*scale*y)/h;
+	//form a local x and y
+	var xl = (x-newX) - (x-newXo);
+	var yl = (y-newY) - (y-newYo);
+	//get degree
+	var deg = Math.asin(yl/10);
+	if(xl < 0 && yl < 0) deg *= -1;
+	else if(xl < 0) deg*= -1;
+	//turn the angle to 90 degrees
+	deg += Math.PI/2;
+	//find coord of endpoint of that angle
+	var newPointX = scale*5*Math.cos(deg);
+	var newPointY = scale*5*Math.sin(deg);
+	ctx.lineTo(x0 + (x-(newXo+newPointX)), y0 + (y-(newYo+newPointY)));
+	//turn the angle again to 180
+	deg -= Math.PI;
+	//find coord of endpoint of that angle
+	newPointX = scale*5*Math.cos(deg);
+	newPointY = scale*5*Math.sin(deg);
+	ctx.lineTo(x0 + (x-(newXo+newPointX)), y0 + (y-(newYo+newPointY)));
 	//close the loop and fill the loop
 	ctx.closePath();
 	ctx.fillStyle='black';
@@ -288,7 +289,6 @@ function centerGraph(){
 
 function render(){
 	console.log("");
-	console.log("render");
 	//background
 	ctx.fillStyle='#FFFFFF';
 	ctx.fillRect(0,0,width,height);
@@ -312,7 +312,6 @@ function render(){
 			if(key in adjList){
 				var obj = [pos, adjList[key]['pos']];
 				lines.push(obj);
-				console.log(vertex + " to " + key);
 			}
 		}//End of for loop
 	}//End of for loop
@@ -355,6 +354,7 @@ function render(){
 		}else if(renderlist[i][0] == 'line'){
 			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
 		}else if(renderlist[i][0] == 'arrowhead'){
+			console.log("arrowhead render");
 			drawArrowhead(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
 		}
 	}//End of for loop
