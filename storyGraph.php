@@ -15,10 +15,13 @@ else{
 		);
 		$count = $count + 1;
 		if($key == 'start') $obj['color'] = 'green';
+		$hasSomething = false;
 		for($i = 0; $i < count($value['options']); $i++){
 			$insert = $value['options'][$i][1];
 			array_push($obj['adjacency'], $insert);
+			if(array_key_exists($insert, $source['content'])) $hasSomething = true;
 		}//End of for loop
+		if(!$hasSomething) $obj['color'] = 'pink';
 		$graph[$key] = $obj;
 	}
 }//End of for loop

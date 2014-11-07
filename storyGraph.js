@@ -1,7 +1,7 @@
 $('document').ready(function(){
 	initialize();
 });
-//adjList = {"v1": {"adjacency": ["v2", "v3"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}, "v3": {"adjacency": ["v1", "v2", "v4"],"pos":[140,100],"force": [0,0],"velocity": [0,0], "color":"red"}, "v4": {"adjacency": ["v3"],"pos":[10,100],"force": [0,0],"velocity": [0,0], "color":"green"}};
+//adjList = {"v1": {"adjacency": ["v2"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1", "v3"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}, "v3": {"adjacency": ["v1","v4"],"pos":[140,100],"force": [0,0],"velocity": [0,0], "color":"red"}, "v4": {"adjacency": ["v3"],"pos":[10,100],"force": [0,0],"velocity": [0,0], "color":"green"}};
 //adjList = {"v1": {"adjacency": ["v2"],"pos": [140,10],"force": [0,0],"velocity": [0,0], "color":"blue"}, "v2": {"adjacency": ["v1"],"pos": [0,0],"force": [0,0],"velocity": [0,0], "color":"white"}};
 var ctx;
 var mouseDownOn = null;
@@ -12,6 +12,7 @@ var height;
 var clip = {"top":0, "right":0, "bottom":0, "left":0};
 var simulation = false;
 function initialize(){
+	console.log(adjList);
 	var element = document.getElementById("mainCanvas");
 	ctx = element.getContext("2d");
 	element.addEventListener("mousedown", doMouseDown, false);
@@ -201,14 +202,46 @@ function drawLine(ctx, x0, y0, x1, y1, scale){
 	ctx.stroke();
 }
 function drawDebugArrow(ctx, x0, y0, dx, dy){
-	//dx *= 5000000;
-	//dy *= 5000000;
-	//console.log("draw x: " + x0 + " y: " + y0 + " dx: " + dx + " dy: " + dy);
 	ctx.beginPath();
 	ctx.lineTo(x0, y0);
 	ctx.lineTo(x0 + dx, y0 + dy);
 	ctx.strokeStyle="red";
 	ctx.stroke();	
+}
+function drawArrowhead(ctx, x0, y0, x1, y1, scale){
+	//console.log("arrowhead function start x0: " + x0 + " y0: " + y0 + " x1: " + x1 + " y1: " + y1);
+	//find location on edge of circle
+	var x = x1 - x0;
+	var y = y1 - y0;
+	var h = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+	//console.log("x: " + x + " y: " + y + " h: " + h);
+	var newX = (10*scale*x)/h;
+	var newY = (10*scale*y)/h;
+	//console.log("newX: " + newX + " newY: " + newY);
+	ctx.beginPath();
+	ctx.lineTo(x0 + (x-newX), y0 + (y-newY));
+	//console.log("first point: x: " + (x-newX) + " y: " + (y-newY)); 
+	//now find point down the line a little
+	newX = (20*scale*x)/h;
+	newY = (20*scale*y)/h;
+	//console.log("newX: " + newX + " newY: " + newY);
+	x -= newX;
+	y -= newY;
+	//console.log("updated x: " + x + " y: " + y + " h: " + h);
+	//go to next point where corner of arrow will be located at 
+	newX = (5*scale*x)/h;
+	newY = (5*scale*y)/h;
+	//console.log("newX: " + newX + " newY: " + newY);
+	ctx.lineTo(x0 + (x-newX), y0 + (y+newY));
+	//console.log("second point: x: " + (x-newX) + " y: " + (y-newY)); 
+	//find the last point
+	ctx.lineTo(x0 + (x+newX), y0 + (y-newY));
+	//console.log("final point: x: " + (x-newX) + " y: " + (y-newY)); 
+	//console.log(" ");
+	//close the loop and fill the loop
+	ctx.closePath();
+	ctx.fillStyle='black';
+	ctx.fill();
 }
 function resizeCanvas(){
 	var widthDiff = window.innerWidth - width;
@@ -254,6 +287,8 @@ function centerGraph(){
 }
 
 function render(){
+	console.log("");
+	console.log("render");
 	//background
 	ctx.fillStyle='#FFFFFF';
 	ctx.fillRect(0,0,width,height);
@@ -277,10 +312,13 @@ function render(){
 			if(key in adjList){
 				var obj = [pos, adjList[key]['pos']];
 				lines.push(obj);
+				console.log(vertex + " to " + key);
 			}
 		}//End of for loop
 	}//End of for loop
+
 	//clean up lines and remove any lines that is outside of the canvas
+	var visitedLines = new Array();
 	for(var i = 0; i < lines.length; i++){
 		var start = lines[i][0];
 		var end = lines[i][1];
@@ -298,8 +336,13 @@ function render(){
 			//end = returned[1];
 			//console.log("return: " + start + " " + end);
 			if(start[0] != end[0] || start[1] != end[1]){ //check if line is not reduced to a point or simply too small
-				var obj = ['line', Math.floor((start[0]-clip['left'])*xscale), Math.floor((start[1]-clip['top'])*yscale), Math.floor((end[0]-clip['left'])*xscale), Math.floor((end[1]-clip['top'])*yscale)];
-				renderlist.unshift(obj);
+				console.log("lines");
+				if(!([start, end] in visitedLines)){
+					var obj = ['line', Math.floor((start[0]-clip['left'])*xscale), Math.floor((start[1]-clip['top'])*yscale), Math.floor((end[0]-clip['left'])*xscale), Math.floor((end[1]-clip['top'])*yscale)];
+					renderlist.unshift(obj);
+				}
+				var arrow = ['arrowhead', Math.floor((lines[i][0][0]-clip['left'])*xscale), Math.floor((lines[i][0][1]-clip['top'])*yscale), Math.floor((lines[i][1][0]-clip['left'])*xscale), Math.floor((lines[i][1][1]-clip['top'])*yscale)];
+				renderlist.unshift(arrow);
 			}
 
 		}
@@ -311,6 +354,8 @@ function render(){
 			drawCircle(ctx, renderlist[i][1], renderlist[i][2], scale, renderlist[i][3]);
 		}else if(renderlist[i][0] == 'line'){
 			drawLine(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
+		}else if(renderlist[i][0] == 'arrowhead'){
+			drawArrowhead(ctx, renderlist[i][1], renderlist[i][2], renderlist[i][3], renderlist[i][4], scale);
 		}
 	}//End of for loop
 	//insert text
